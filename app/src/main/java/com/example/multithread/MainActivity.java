@@ -2,10 +2,12 @@ package com.example.multithread;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -39,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView Receive,receive_message;
     private int port_intValue;
     OutputStream outputStream;
+    private SocketService.MyBinder mbinder;
     private boolean isConnected = false; // 连接状态标志位
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,11 +99,27 @@ public void connect(View view) {  //连接
                     isConnected = true;
                     btnConnect.setText("DISCONNECT");
                     runOnUiThread(new Runnable() {
+                        private ServiceConnection connection=new ServiceConnection() {
+                            @Override
+                            public void onServiceConnected(android.content.ComponentName name, android.os.IBinder service) {
+                                mbinder=(SocketService.MyBinder)service;
+                                Log.d("MainActivity", "Service connected. Attempting to connect to server...");
+                                mbinder.sendData(11,22);
+                            }
+
+                            @Override
+                            public void onServiceDisconnected(android.content.ComponentName name) {
+
+                            }
+                        };
+
                         @Override
                         public void run() {
                             // 在主线程中启动新的 Activity
-                            Intent intent = new Intent(MainActivity.this, JoystickCompletement.class);
+                            Intent intent = new Intent(MainActivity.this, JoystickImpletement.class);
                             startActivity(intent);
+                            //Intent intent1=new Intent(MainActivity.this,SocketService.class);
+                            //bindService(intent1,connection,BIND_AUTO_CREATE);
                         }
                     });
 

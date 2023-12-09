@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -15,18 +16,15 @@
         android:theme="@style/Theme.MultiThread"
         tools:targetApi="31">
         <service
-            android:name=".SocketSend"
+            android:name=".SocketService"
             android:enabled="true"
             android:exported="true"></service>
 
         <activity
-            android:name=".JoystickCompletement"
-            android:exported="false" />
-        <activity
-            android:name=".DirectionControl"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".JoystickImpletement"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
