@@ -199,18 +199,35 @@ public class JoystickImpletement extends AppCompatActivity {
 //        port.setText(savedPortStr);
 ////        Receive();
 //    }
-    public void connect(View view) {  //连接
+    public void connect1(View view) {  //连接
         Intent intent = new Intent(this, SocketService.class);
+        Log.d("MainActivity", String.valueOf(isConnected));
 //        intent.putExtra("ip", ip_addr.getText().toString());
 //        intent.putExtra("port", Integer.parseInt(port.getText().toString()));
-        if(isConnected==false){
+        if(mbinder.isConnected()==false){
         bindService(intent, connection, BIND_AUTO_CREATE);
-        bindService(intent, connection1, BIND_AUTO_CREATE);}
+        bindService(intent, connection1, BIND_AUTO_CREATE);
+            Log.d("MainActivity2", String.valueOf(isConnected));
+
+            btnConnect.setText("DISCONNECT");}
         //Intent intent = new Intent(this, SocketService.class);
-//        if(isConnected){
+        if(mbinder.isConnected()){
         bindService(intent, connection2, BIND_AUTO_CREATE);
 //
-//            btnConnect.setText("CONNECT");}
+            btnConnect.setText("CONNECT");}
+}
+
+public void connect(View view) {  //连接
+    Intent intent = new Intent(this, SocketService.class);
+    Log.d("MainActivity", String.valueOf(isConnected));
+    if(mbinder == null || !mbinder.isConnected()){
+        bindService(intent, connection, BIND_AUTO_CREATE);
+        //if(mbinder.isConnected())
+        btnConnect.setText("DISCONNECT");
+    } else {
+        bindService(intent, connection2, BIND_AUTO_CREATE);
+        btnConnect.setText("CONNECT");
+    }
 }
 
 }

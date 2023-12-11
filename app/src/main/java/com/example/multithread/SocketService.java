@@ -22,6 +22,9 @@ public class SocketService extends Service {
     }
 
     public class MyBinder extends Binder {
+        public boolean isConnected() {
+            return isConnected;
+        }
         private static final String TAG = "MyBinder";
        private SocketService msocketService;
         public MyBinder(SocketService socketService) {
@@ -183,4 +186,5 @@ public void connect(String ip, int port) {  //连接
             }
         }).start();
     }
+
 }
