@@ -43,6 +43,7 @@ public class JoystickImpletement extends AppCompatActivity {
     private int port_intValue;
     static OutputStream outputStream;
     private boolean isConnected = false; // 连接状态标志位
+    private boolean connetion2_flag = false;
 
     public JoystickImpletement() {
     }
@@ -138,7 +139,7 @@ public class JoystickImpletement extends AppCompatActivity {
         //Log.d("MainActivity", "Service connected. Attempting to send...");
     }
 
-    private ServiceConnection connection = new ServiceConnection() {
+    private ServiceConnection connection = new ServiceConnection() {//连接
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mbinder = (SocketService.MyBinder) service;
@@ -151,7 +152,7 @@ public class JoystickImpletement extends AppCompatActivity {
 
         }
     };
-    private ServiceConnection connection1 = new ServiceConnection() {
+    private ServiceConnection connection1 = new ServiceConnection() {//发送数据
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mbinder = (SocketService.MyBinder) service;
@@ -164,41 +165,22 @@ public class JoystickImpletement extends AppCompatActivity {
 
         }
     };
-    private ServiceConnection connection2=new ServiceConnection() {
+    private ServiceConnection connection2=new ServiceConnection() {//断开连接
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mbinder=(SocketService.MyBinder)service;
             Log.d("MainActivity", "Service connected. Attempting to disconnect...");
             mbinder.disconnect();
+            connetion2_flag=true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-
+            connetion2_flag=false;
         }
     };
 
-    //    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.layout);
-//        tvContent = findViewById(R.id.textView);
-//        //isConnected=findViewById(R.id.textView)
-//        btnConnect = (Button) findViewById(R.id.connect);
-//        //btnDisconnect = (Button) findViewById(R.id.disconnect);
-//        mEdit = (EditText) findViewById(R.id.edit);
-//        ip_addr = (EditText) findViewById(R.id.ip_addr);
-//        port = (EditText) findViewById(R.id.port);
-//
-//
-//        receive_message = (TextView) findViewById(R.id.receive_message);
-//        Map<String,Object> IPinfo=SaveIP.getIPInfo(this);
-//        String savedIP=(String)IPinfo.get("ip");
-//        String savedPortStr=String.valueOf(IPinfo.get("port"));
-//        ip_addr.setText(savedIP);
-//        port.setText(savedPortStr);
-////        Receive();
-//    }
+
     public void connect1(View view) {  //连接
         Intent intent = new Intent(this, SocketService.class);
         Log.d("MainActivity", String.valueOf(isConnected));
@@ -221,11 +203,17 @@ public void connect(View view) {  //连接
     Intent intent = new Intent(this, SocketService.class);
     Log.d("MainActivity", String.valueOf(isConnected));
     if(mbinder == null || !mbinder.isConnected()){
+        if(connetion2_flag==true)
+        unbindService(connection2);
         bindService(intent, connection, BIND_AUTO_CREATE);
+
         //if(mbinder.isConnected())
         btnConnect.setText("DISCONNECT");
     } else {
+
         bindService(intent, connection2, BIND_AUTO_CREATE);
+        unbindService(connection);
+        //unbindService(connection2);
         btnConnect.setText("CONNECT");
     }
 }
