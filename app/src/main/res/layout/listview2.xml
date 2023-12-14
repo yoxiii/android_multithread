@@ -11,24 +11,30 @@
         android:id="@+id/remote_control"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Remote Control" />
+        android:text="Remote Control"
+        android:onClick="remoteControl"
+        android:layout_weight="1"/>
 
     <Button
         android:id="@+id/storage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Storage" />
+        android:text="Storage"
+        android:layout_weight="1"/>
+
 
     <Button
         android:id="@+id/line_patrol"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Line Patrol" />
+        android:text="Line Patrol"
+        android:layout_weight="1"/>
 
     <Button
         android:id="@+id/obstacle_avoidance"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Obstacle Avoidance" />
+        android:text="Obstacle Avoidance"
+        android:layout_weight="1"/>
 
 </LinearLayout>

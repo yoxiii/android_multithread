@@ -1,0 +1,580 @@
+Subject: [PATCH] socket access
+---
+Index: .idea/dbnavigator.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/dbnavigator.xml b/.idea/dbnavigator.xml
+--- a/.idea/dbnavigator.xml	(revision 8b238fd4b2a4bf174035384b5450c571902b9960)
++++ b/.idea/dbnavigator.xml	(revision a286dfebcce069a807262391f57f38150903cacf)
+@@ -1,5 +1,11 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
++  <component name="DBNavigator.Project.DatabaseBrowserManager">
++    <autoscroll-to-editor value="false" />
++    <autoscroll-from-editor value="true" />
++    <show-object-properties value="true" />
++    <loaded-nodes />
++  </component>
+   <component name="DBNavigator.Project.DatabaseFileManager">
+     <open-files />
+   </component>
+Index: .idea/gradle.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/gradle.xml b/.idea/gradle.xml
+--- a/.idea/gradle.xml	(revision 8b238fd4b2a4bf174035384b5450c571902b9960)
++++ b/.idea/gradle.xml	(revision a286dfebcce069a807262391f57f38150903cacf)
+@@ -1,5 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
++  <component name="GradleMigrationSettings" migrationVersion="1" />
+   <component name="GradleSettings">
+     <option name="linkedExternalProjectsSettings">
+       <GradleProjectSettings>
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision 8b238fd4b2a4bf174035384b5450c571902b9960)
++++ b/.idea/misc.xml	(revision a286dfebcce069a807262391f57f38150903cacf)
+@@ -1,4 +1,3 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="ExternalStorageConfigurationManager" enabled="true" />
+   <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="jbr-17" project-jdk-type="JavaSDK">
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision 8b238fd4b2a4bf174035384b5450c571902b9960)
++++ b/app/src/main/AndroidManifest.xml	(revision a286dfebcce069a807262391f57f38150903cacf)
+@@ -2,6 +2,8 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:tools="http://schemas.android.com/tools">
+ 
++    <uses-permission android:name="android.permission.INTERNET" />
++
+     <application
+         android:allowBackup="true"
+         android:dataExtractionRules="@xml/data_extraction_rules"
+@@ -12,6 +14,9 @@
+         android:supportsRtl="true"
+         android:theme="@style/Theme.MultiThread"
+         tools:targetApi="31">
++        <activity
++            android:name=".DirectionControl"
++            android:exported="false" />
+         <activity
+             android:name=".MainActivity"
+             android:exported="true">
+Index: app/src/main/java/com/example/multithread/DirectionControl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/multithread/DirectionControl.java b/app/src/main/java/com/example/multithread/DirectionControl.java
+new file mode 100644
+--- /dev/null	(revision a286dfebcce069a807262391f57f38150903cacf)
++++ b/app/src/main/java/com/example/multithread/DirectionControl.java	(revision a286dfebcce069a807262391f57f38150903cacf)
+@@ -0,0 +1,14 @@
++package com.example.multithread;
++
++import androidx.appcompat.app.AppCompatActivity;
++
++import android.os.Bundle;
++
++public class DirectionControl extends AppCompatActivity {
++
++    @Override
++    protected void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        setContentView(R.layout.activity_direction_control);
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/multithread/MainActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/multithread/MainActivity.java b/app/src/main/java/com/example/multithread/MainActivity.java
+--- a/app/src/main/java/com/example/multithread/MainActivity.java	(revision 8b238fd4b2a4bf174035384b5450c571902b9960)
++++ b/app/src/main/java/com/example/multithread/MainActivity.java	(revision a286dfebcce069a807262391f57f38150903cacf)
+@@ -3,79 +3,238 @@
+ import androidx.annotation.NonNull;
+ import androidx.appcompat.app.AppCompatActivity;
+ 
++import android.content.SharedPreferences;
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.Looper;
+ import android.os.Message;
+ import android.view.View;
++import android.widget.Button;
++import android.widget.EditText;
+ import android.widget.TextView;
+ import android.widget.Toast;
+ 
+ import com.example.multithread.R;
+ 
++import java.io.BufferedReader;
++import java.io.IOException;
++import java.io.InputStream;
++import java.io.InputStreamReader;
++import java.io.OutputStream;
++import java.net.Socket;
++import java.util.Map;
++
+ public class MainActivity extends AppCompatActivity {
+ 
++
++    private Socket socket;
+     private TextView tvContent;
+     private String strFromNet;
++    private Button btnConnect, btnDisconnect, btnSend;
++    private EditText mEdit,ip_addr,port;
++    BufferedReader br ;
++
++    // 接收服务器发送过来的消息
++    String response;
++    InputStream is;
++
++    // 输入流读取器对象
++    InputStreamReader isr ;
++
++    private TextView Receive,receive_message;
++    private int port_intValue;
++    OutputStream outputStream;
++    private boolean isConnected = false; // 连接状态标志位
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
++        getSupportActionBar().hide(); // 隐藏 ActionBar
+         super.onCreate(savedInstanceState);
+-        setContentView(R.layout.activity_main);
++        setContentView(R.layout.layout);
+ 
+-        tvContent = findViewById(R.id.tv_content);
++        tvContent = findViewById(R.id.textView);
++        //isConnected=findViewById(R.id.textView)
++        btnConnect = (Button) findViewById(R.id.connect);
++        btnDisconnect = (Button) findViewById(R.id.disconnect);
++        mEdit = (EditText) findViewById(R.id.edit);
++        ip_addr = (EditText) findViewById(R.id.ip_addr);
++        port = (EditText) findViewById(R.id.port);
+ 
+ 
++        receive_message = (TextView) findViewById(R.id.receive_message);
++        Map<String,Object> IPinfo=SaveIP.getIPInfo(this);
++        String savedIP=(String)IPinfo.get("ip");
++        String savedPortStr=String.valueOf(IPinfo.get("port"));
++        ip_addr.setText(savedIP);
++        port.setText(savedPortStr);
++        Receive();
++        detectConnection();
+     }
++    //handler负责接收子线程更新的信息
+     private Handler mHandler=new Handler(Looper.myLooper()){
+         @Override
+         public void handleMessage(@NonNull Message msg) {
+             super.handleMessage(msg);
+-            if(msg.what==1){
+-                String strData=(String)msg.obj;
+-                tvContent.setText(strData);
+-
++            if(msg.what==0){
++                //String strData=(String)msg.obj;
++                //tvContent.setText(strData);
++                receive_message.setText(response);
+             }
+         }
+     };
+-    Thread thread;
+-    public void start(View view) {
+-        new Thread(new Runnable() {
+-            @Override
+-            public void run() {
+-                strFromNet=getStringFromNet();
+-                Message message=new Message();
+-                message.what=1;
+-                message.obj=strFromNet;
+-                mHandler.sendMessage(message);
+-            }
+-        }).start();
++    //因为4.0以后不能再主线程中进行网络操作,所以需要另外开辟一个线程
++public void connect(View view) {  //连接
++    new Thread(new Runnable() {
++        @Override
++        public void run() {
++            try {
++                String port_text = port.getText().toString();
++                try {
++                    port_intValue = Integer.parseInt(port_text); //port转为int类型
++                } catch (NumberFormatException e) {
++                    e.printStackTrace();
++                }
++                socket = new Socket(ip_addr.getText().toString(), port_intValue);
++                boolean isIPsaved=SaveIP.saveIPInfo(MainActivity.this,ip_addr.getText().toString(),port_intValue);
++                System.out.println(isIPsaved);
++                isConnected=true;
++
++            } catch (IOException e) {
++                e.printStackTrace();
++                }
++           // Toast.makeText(MainActivity.this,"任务完成！",Toast.LENGTH_SHORT).show();
++        }
++    }).start();
+ 
+-
+-        // 做一个耗时任务
+-        Toast.makeText(MainActivity.this,"任务完成！",Toast.LENGTH_SHORT).show();
+-//        String strFromNet = getStringFromNet();
+-    }
++}
++private void detectConnection(){
++    new Thread(new Runnable() {
++        @Override
++        public void run() {
++            try {
++                updateConnectionStatus();
++                Thread.sleep(1000);
++            } catch (InterruptedException e) {
++                throw new RuntimeException(e);
++            }
++        }
++    });
++}
+ 
+-
+-    private String getStringFromNet() {
+-        // 假装从网络获取了一个字符串
+-        String result = "";
+-
+-        StringBuilder stringBuilder = new StringBuilder();
+-
+-        // 模拟一个耗时操作
+-        for (int i = 0; i < 100; i++) {
+-            stringBuilder.append("字符串" + i);
++    private void updateConnectionStatus() {
++        if (isConnected) {
++            tvContent.setText("Connected"); // connectionStatusTextView 为你的 TextView
++        } else {
++            tvContent.setText("Not Connected");
+         }
+-
+-        try {
+-            Thread.sleep(5000);
+-        } catch (InterruptedException e) {
+-            e.printStackTrace();
++    }
++private void Receive()
++    {
++        new Thread(new Runnable() {
++            @Override
++            public void run() {
++                try {
++                    while (true){
++                        if(socket!=null&&socket.isConnected()) {
++                            is = socket.getInputStream();
++                            isr = new InputStreamReader(is);
++                            br = new BufferedReader(isr);
++                            response = br.readLine();
++                            System.out.println(response);
++                            if (response != null) {
++                                Message msg = new Message();
++                                msg.what = 0;
++                                mHandler.sendMessage(msg);
++                            }
++                        }
++                        Thread.sleep(100);
++                    }
++
++                } catch (IOException e) {
++                    e.printStackTrace();
++                } catch (InterruptedException e) {
++                    throw new RuntimeException(e);
++                }
++            }
++        }).start();
++    }
++
++
++public void send(View view){
++    new Thread(new Runnable() {
++        @Override
++        public void run() {
++            try {
++                outputStream=socket.getOutputStream();
++                outputStream.write((mEdit.getText().toString()+"\n").getBytes("utf-8"));
++                //数据的结尾加上换行符才可让服务器端的readline()停止阻塞
++                outputStream.flush();
++            }catch (IOException e)
++            {
++                e.printStackTrace();
++            }
+         }
++    }).start();
++}
+ 
+-        result = stringBuilder.toString();
++public void disconnect(View view){   //断开
++        try {
++            if (socket != null && socket.isConnected()) {
++            socket.close();}
++//            try{
++//                Thread.sleep(1000);
++//            } catch (InterruptedException e) {
++//                throw new RuntimeException(e);
++//            }
++            System.out.println("Output Shutdown: "+socket.isOutputShutdown());
++            System.out.println("Input Shutdown: " +socket.isInputShutdown());
++            //socket=null;
++            isConnected=false;
+ 
+-        return result;
+-    }
++        }catch (IOException e)
++        {e.printStackTrace();}
++}
++
++
++
++//    public void start(View view) {
++//        new Thread(new Runnable() {
++//            @Override
++//            public void run() {
++//                //strFromNet=getStringFromNet();
++//                Message message=new Message();
++//                message.what=1;
++//                message.obj=strFromNet;
++//                mHandler.sendMessage(message);
++//            }
++//        }).start();
++//
++//
++//        // 做一个耗时任务
++//        Toast.makeText(MainActivity.this,"任务完成！",Toast.LENGTH_SHORT).show();
++////        String strFromNet = getStringFromNet();
++//    }
++
++
++
++//    private String getStringFromNet() {
++//        // 假装从网络获取了一个字符串
++//        String result = "";
++//
++//        StringBuilder stringBuilder = new StringBuilder();
++//
++//        // 模拟一个耗时操作
++//        for (int i = 0; i < 100; i++) {
++//            stringBuilder.append("字符串" + i);
++//        }
++//
++//        try {
++//            Thread.sleep(5000);
++//        } catch (InterruptedException e) {
++//            e.printStackTrace();
++//        }
++//
++//        result = stringBuilder.toString();
++//
++//        return result;
++//    }
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/example/multithread/SaveIP.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/multithread/SaveIP.java b/app/src/main/java/com/example/multithread/SaveIP.java
+new file mode 100644
+--- /dev/null	(revision a286dfebcce069a807262391f57f38150903cacf)
++++ b/app/src/main/java/com/example/multithread/SaveIP.java	(revision a286dfebcce069a807262391f57f38150903cacf)
+@@ -0,0 +1,28 @@
++package com.example.multithread;
++
++import android.content.Context;
++import android.content.SharedPreferences;
++
++import java.util.HashMap;
++import java.util.Map;
++
++public class SaveIP {
++    public static boolean saveIPInfo(Context context, String ip, int port) {
++    SharedPreferences sp =context.getSharedPreferences("data",Context.MODE_PRIVATE);
++    SharedPreferences.Editor edit=sp.edit();
++    edit.putInt("port",port);
++    edit.putString("ip",ip);
++
++    edit.apply();
++    return true;
++    }
++    public static Map<String,Object> getIPInfo(Context context){
++        SharedPreferences sp=context.getSharedPreferences("data",Context.MODE_PRIVATE);
++        String ip_addr=sp.getString("ip","");
++        int port=sp.getInt("port",3333);
++        Map<String,Object> IPinfoMap=new HashMap<>();
++        IPinfoMap.put("ip",ip_addr);
++        IPinfoMap.put("port",port);
++        return IPinfoMap;
++    }
++}
+Index: app/src/main/res/layout/activity_direction_control.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_direction_control.xml b/app/src/main/res/layout/activity_direction_control.xml
+new file mode 100644
+--- /dev/null	(revision a286dfebcce069a807262391f57f38150903cacf)
++++ b/app/src/main/res/layout/activity_direction_control.xml	(revision a286dfebcce069a807262391f57f38150903cacf)
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="utf-8"?>
++<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    tools:context=".DirectionControl">
++
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+Index: app/src/main/res/layout/activity_main.xml
+===================================================================
+diff --git a/app/src/main/res/layout/activity_main.xml b/app/src/main/res/layout/activity_main.xml
+deleted file mode 100644
+--- a/app/src/main/res/layout/activity_main.xml	(revision 8b238fd4b2a4bf174035384b5450c571902b9960)
++++ /dev/null	(revision 8b238fd4b2a4bf174035384b5450c571902b9960)
+@@ -1,37 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+-    xmlns:app="http://schemas.android.com/apk/res-auto"
+-    xmlns:tools="http://schemas.android.com/tools"
+-    android:layout_width="match_parent"
+-    android:layout_height="match_parent"
+-    android:orientation="vertical"
+-    tools:context=".MainActivity">
+-
+-
+-    <LinearLayout
+-        android:layout_width="match_parent"
+-        android:layout_height="match_parent"
+-        android:layout_marginRight="10dp"
+-        android:orientation="vertical"
+-        android:paddingLeft="10dp">
+-
+-
+-        <TextView
+-            android:id="@+id/tv_content"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            style="@style/MyTextStyle"
+-            android:text="结果"
+-            />
+-
+-
+-        <Button
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:layout_marginTop="10dp"
+-            android:text="开始"
+-            android:onClick="start"
+-            android:textAllCaps="false" />
+-
+-    </LinearLayout>
+-</ScrollView>
+\ No newline at end of file
+Index: app/src/main/res/layout/layout.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/layout.xml b/app/src/main/res/layout/layout.xml
+new file mode 100644
+--- /dev/null	(revision a286dfebcce069a807262391f57f38150903cacf)
++++ b/app/src/main/res/layout/layout.xml	(revision a286dfebcce069a807262391f57f38150903cacf)
+@@ -0,0 +1,75 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:orientation="vertical">
++    <LinearLayout
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content">
++        <!-- First EditText taking 2/3 of the space -->
++        <EditText
++            android:id="@+id/ip_addr"
++            android:layout_width="0dp"
++            android:layout_height="wrap_content"
++            android:layout_weight="2"
++            android:hint="ip address"/>
++
++        <!-- Second EditText taking 1/3 of the space -->
++        <EditText
++            android:id="@+id/port"
++            android:layout_width="0dp"
++            android:layout_height="wrap_content"
++            android:layout_weight="1"
++            android:hint="port"/>
++    </LinearLayout>
++
++
++
++
++    <Button
++        android:id="@+id/connect"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:text="connect"
++        android:onClick="connect"/>
++
++    <Button
++        android:id="@+id/disconnect"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:text="disconnect"
++        android:onClick="disconnect"/>
++
++    <TextView
++        android:id="@+id/receive_message"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content" />
++
++
++
++    <EditText
++        android:id="@+id/edit"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content" />
++
++    <Button
++        android:id="@+id/send"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:text="send"
++        android:onClick="send"/>
++
++    <RelativeLayout
++        android:layout_width="match_parent"
++        android:layout_height="match_parent">
++
++        <TextView
++            android:id="@+id/textView"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:layout_alignParentBottom="true"
++            android:layout_centerHorizontal="true"
++            android:text="TextView" />
++    </RelativeLayout>
++
++</LinearLayout>
+\ No newline at end of file

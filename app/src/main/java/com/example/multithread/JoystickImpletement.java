@@ -203,15 +203,17 @@ public void connect(View view) {  //连接
     Intent intent = new Intent(this, SocketService.class);
     Log.d("MainActivity", String.valueOf(isConnected));
     if(mbinder == null || !mbinder.isConnected()){
-        if(connetion2_flag==true)
-        unbindService(connection2);
+        if(connetion2_flag)
+         unbindService(connection2);
         bindService(intent, connection, BIND_AUTO_CREATE);
 
-        //if(mbinder.isConnected())
-        btnConnect.setText("DISCONNECT");
+
+        if(mbinder != null && mbinder.isConnected())
+         btnConnect.setText("DISCONNECT");
     } else {
 
         bindService(intent, connection2, BIND_AUTO_CREATE);
+
         unbindService(connection);
         //unbindService(connection2);
         btnConnect.setText("CONNECT");

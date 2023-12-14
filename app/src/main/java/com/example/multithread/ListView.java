@@ -14,7 +14,7 @@ public class ListView extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         getSupportActionBar().hide(); // 隐藏 ActionBar
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list_view);
+        setContentView(R.layout.listview2);
     }
     public void remoteControl(View view){
         Intent intent = new Intent(this, JoystickImpletement.class);
